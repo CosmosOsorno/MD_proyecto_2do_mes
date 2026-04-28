@@ -1,4 +1,4 @@
-ADQL="SELECT pl_name, discoverymethod, disc_facility, AVG(pl_rade) AS pl_rade, AVG(pl_eqt) AS pl_eqt, AVG(pl_orbsmax) AS pl_orbsmax, AVG(st_teff) AS st_teff, AVG(st_lum) AS st_lum FROM ps WHERE pl_rade IS NOT NULL AND pl_eqt IS NOT NULL GROUP BY pl_name, discoverymethod, disc_facility ORDER BY pl_name"
+ADQL="SELECT pl_name, discoverymethod, disc_facility, pl_rade, pl_eqt, pl_orbsmax, st_teff, st_lum FROM PSCompPars WHERE pl_rade IS NOT NULL AND pl_eqt IS NOT NULL ORDER BY pl_name"
 
 URL_ADQL=$(echo $ADQL | sed 's/ /+/g')
 
