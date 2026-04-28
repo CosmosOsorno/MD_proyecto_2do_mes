@@ -5,6 +5,7 @@
 No todos los planetas orbitan estrellas como nuestro Sol. Muchos orbitan enanas rojas frías o estrellas gigantes calientes. Queremos descubrir qué tipos de telescopios y métodos de descubrimiento son más eficientes para encontrar exoplanetas pequeños (rocosos) que existan en zonas donde el agua podría ser líquida.
 
 El Filtro de Habitabilidad: "Mundos Rocosos Templados": Temperatura de equilibrio (pl_eqt) entre 200 K y 320 K, y Radio (pl_rade) menor a 2.5 radios terrestres.
+
 Investiga cuántos planetas descubrió el telescopio terrestre “TRAPPIST-South”.
 
 ## Toma de datos
@@ -18,7 +19,7 @@ WHERE pl_rade IS NOT NULL AND pl_eqt IS NOT NULL
 ORDER BY pl_name
 ```
 
-retorna 17070 datos, siendo casi el triple de los exoplanetas reales descubiertos, evidenciando la duplicidad de los objetos, esto es debido a que cada fila de datos corresponde a un paper que trabajó sobre el exoplaneta y los datos encontrados, para esto no se usará entonces la tabla ps, sino la tabla PSCompPars que presenta el concenso de los datos de los planetas [2]. Usando el siguiente ADQL:
+retorna 17070 datos, siendo casi el triple de los exoplanetas reales descubiertos, evidenciando la duplicidad de los objetos, esto es debido a que cada fila de datos corresponde a un paper que trabajó sobre el exoplaneta y los datos encontrados, para esto no se usará entonces la tabla ps, sino la tabla PSCompPars que presenta el consenso de los datos de los planetas [2]. Usando el siguiente ADQL:
 
 ```sql
 SELECT pl_name, discoverymethod, disc_facility, pl_rade, pl_eqt, pl_orbsmax, st_teff, st_lum
@@ -35,12 +36,17 @@ AND pl_eqt IS NOT NULL
 ORDER BY pl_name
 ```
 
-Para este proyecto se consideran los exoplanetas pequeños como aquellos con radio menor a $2.5 R_{\oplus}$, aunque esto no garantiza composición rocosa, este dato se comprobó en el trabajo del primer mes, ya que podrían ser también miniNeptunos.
+Para este proyecto se consideran los exoplanetas pequeños como aquellos con radio menor a $2.5 R_{\oplus}$, aunque esto no garantiza composición rocosa, este dato se comprobó en el trabajo del primer mes, ya que podrían ser también mini-Neptunos.
 
 # Método
 
-Este proyecto tiene como objetivo encontrar planetas rocosos pequeños, dónde pueda existir agua líquida y para esto un factor importante para esta condición es la temperatura de equilibrio del planeta que según el paso a paso del proyecto se puede tomar el rango de 200 a 320 K. El agua líquida es una de las bases para que un planeta sea habitable, este trabajo ampliará un poco más el alcance y comparará de estos planetas cuales también se encuentran en la zona de habitabilidad de Kopparapu, quien define un modelo que define los límites de la zona de habitabilidad de una estrella,y para planetas rocosos que cumplen condiciones como tener agua líquida en su superficie de pero también se deben cumplir más condiciones como modelo climático 1D radiativo–convectivo, sin nubes y se fija en la temperatura superficial calculando el flujo estelar necesario para mantenerla, además supone planetas tipo Tierra, una atmósfera rica en $H_2O$ o $CO_2$ [3].
-El modelo de Kopparapu define una zona de una estrella entre la que los planetas que se encuentran dentro de esta zona tienes mayor probabilidad de ser habitables, que a veces se puede llamar la zona risitos de oro. En el trabajo de Kopparapu el límite más cerca a la estrella es el límite interno y el más lejano es el límite exterior, además se dividen en límites optimistas y conservadores [3]. Un dato importante es que este método solo aplica para estrellas con temperatura efectiva entre 2600 - 7200 K.
+Este proyecto tiene como objetivo encontrar exoplanetas pequeños que podrían tener condiciones compatibles con la existencia de agua líquida. Para esto se aplica primero el filtro propuesto en el ejercicio: temperatura de equilibrio entre 200 K y 320 K, y radio menor que $2.5R_\oplus$.
+
+Este filtro permite identificar exoplanetas pequeños y templados, aunque este radio no garantiza que todos sean realmente rocosos. Un planeta con radio menor que $2.5R_\oplus$ puede ser rocoso, pero también podría ser un mini-Neptuno (Esto se evidenció en el proyecto del primer mes).
+
+Además del filtro simple de temperatura, este trabajo compara los candidatos con la zona habitable calculada por Kopparapu. Este modelo estima los límites interno y externo de la zona habitable usando el flujo estelar efectivo, la luminosidad de la estrella y la distancia orbital del planeta. Por esta razón, el criterio de Kopparapu no depende solamente de la temperatura de equilibrio del planeta.
+
+El modelo de Kopparapu considera planetas tipo Tierra bajo un modelo climático 1D radiativo-convectivo, sin nubes. Cerca del límite interno se considera una atmósfera rica en vapor de agua, mientras que cerca del límite externo se considera una atmósfera rica en $CO_2$. Además, este modelo aplica para estrellas con temperatura efectiva entre 2600 K y 7200 K.[3]
 
 | Límite                     | Tipo                   |
 | -------------------------- | ---------------------- |
@@ -57,7 +63,7 @@ $$T_\star= T_{\rm eff} - 5780$$
 $$S_{\rm eff}=S_{\rm eff,\odot}+aT_\star+bT_\star^2+cT_\star^3+dT_\star^4$$
 
 $$d=\sqrt{(L_\star/L_\odot)/S_{\rm eff}}$$
-En los datos de la Nasa st_lum representa $log*{10}(L*\star/L*\odot)$, por eso se transforma con $10^{st_lum}$
+En los datos de la NASA, `st_lum` representa $\log_{10}(L_\star/L_\odot)$, por eso se transforma como $L_\star/L_\odot = 10^{st\_lum}$
 
 Los valores correspondientes a las variables $S_{eff,⊙}$, $a$, $b$, $c$, $d$ dependen de cuál límite se está calculando y se expresa en la siguiente tabla [4]:
 
@@ -73,51 +79,42 @@ Los valores correspondientes a las variables $S_{eff,⊙}$, $a$, $b$, $c$, $d$ d
 
 ## Métodos de detección
 
-Primero observemos de la totalidad de exoplanetas descubiertos cuales son los métodos usados y cuántos planetas se descubrieron por dicho método:
-
-| Método de descubrimiento      | Radio prom $\overline{R_{\oplus}}$ | Cant. de planetas | %     |
-| ----------------------------- | ---------------------------------- | ----------------- | ----- |
-| Imaging                       | 15.873417                          | 60                | 1.29  |
-| Microlensing                  | 10.762000                          | 5                 | 0.11  |
-| Orbital Brightness Modulation | 15.244240                          | 1                 | 0.02  |
-| Radial Velocity               | 5.477395                           | 193               | 4.14  |
-| Transit                       | 4.420317                           | 4381              | 93.99 |
-| Transit Timing Variations     | 4.219476                           | 21                | 0.45  |
-
-Se observa que el método de descubrimiento más usado en la detección de exoplanetas es el método de tránsito con el 93.99% de los planetas descubiertos por este método.
-Ahora realizando un filtro por planetas rocosos pequeños ($R < 2.5 R_{\oplus}$) se obtiene:
+Se realiza un filtro para seleccionar planetas rocosos pequeños ($R < 2.5R_\oplus$) y templados ($200K \leq T \leq 320K$). Con este filtro se obtiene:
 
 | Método de descubrimiento  | Radio prom $\overline{R_{\oplus}}$ | Cant. de planetas | %     |
 | ------------------------- | ---------------------------------- | ----------------- | ----- |
-| Microlensing              | 2.210000                           | 1                 | 0.04  |
-| Radial Velocity           | 1.621965                           | 81                | 3.48  |
-| Transit                   | 1.675284                           | 2232              | 95.96 |
-| Transit Timing Variations | 1.709083                           | 12                | 0.52  |
+| Radial Velocity           | 1.630118                           | 17                | 19.77 |
+| Transit                   | 1.813176                           | 67                | 77.91 |
+| Transit Timing Variations | 1.268500                           | 2                 | 2.33  |
 
-Al igual que el caso anterior se observa que el método de tránsito es el más usado para encontrar planetas rocosos pequeños con el 95.96 % de los planetas descubiertos por este método.
+Se observa que el método de tránsito es el más usado para encontrar planetas rocosos pequeños y templados, con el 77.91 % de los planetas detectados. Le sigue el método de velocidad radial con el 19.77 %, mientras que las variaciones en tiempo de tránsito son el 2.33 %. Esto muestra que el tránsito sigue siendo el método que domina la detección de exoplanetas.
 
-Con la base de datos descargada a continuación se lista el ranking de los 10 telescopios que que descubierto más exoplanetas:
+Ahora se realiza el análisis por telescopio:
 
-| disc_facility                                | cantidad |
-| -------------------------------------------- | -------- |
-| Kepler                                       | 2745     |
-| Transiting Exoplanet Survey Satellite (TESS) | 835      |
-| K2                                           | 371      |
-| SuperWASP                                    | 120      |
-| Multiple Observatories                       | 77       |
-| HATSouth                                     | 73       |
-| HATNet                                       | 67       |
-| La Silla Observatory                         | 52       |
-| SuperWASP-South                              | 32       |
-| CoRoT                                        | 28       |
+| Instalación / telescopio                     | Método de descubrimiento  | cantidad | %     |
+| -------------------------------------------- | ------------------------- | -------- | ----- |
+| Kepler                                       | Transit                   | 44       | 51.16 |
+| Transiting Exoplanet Survey Satellite (TESS) | Transit                   | 11       | 12.79 |
+| K2                                           | Transit                   | 7        | 8.14  |
+| Multiple Observatories                       | Radial Velocity           | 6        | 6.98  |
+| Calar Alto Observatory                       | Radial Velocity           | 4        | 4.65  |
+| La Silla Observatory                         | Radial Velocity           | 4        | 4.65  |
+| Multiple Facilities                          | Radial Velocity           | 2        | 2.33  |
+| Multiple Observatories                       | Transit                   | 2        | 2.33  |
+| European Southern Observatory                | Radial Velocity           | 1        | 1.16  |
+| La Silla Observatory                         | Transit                   | 1        | 1.16  |
+| MEarth Project                               | Transit                   | 1        | 1.16  |
+| Multiple Observatories                       | Transit Timing Variations | 1        | 1.16  |
+| SPECULOOS Southern Observatory               | Transit                   | 1        | 1.16  |
+| Transiting Exoplanet Survey Satellite (TESS) | Transit Timing Variations | 1        | 1.16  |
 
-Por mucho el telescopio que más exoplanetas ha descubierto es el Kepler.
+La instalación con mayor número de exoplanetas pequeños y templados es Kepler, con 44 descubrimientos, que corresponde al 51.16 % del total. Le siguen TESS, con 11 candidatos, y K2, con 7 candidatos. Esto muestra que los telescopios que hacen búsqueda basadas en el método de tránsito, principalmente los espaciales, han sido las más eficientes para encontrar candidatos tipo “Tierra 2.0”.
 
-Aunque no está dentro de la lista de telescopios que más exoplanetas ha descubierto, el telescopio TRAPPIST-South descubrio 7 planetas todos en un mismo sitema planetario y es el sistema planetario TRAPPIST-1. Es uno de los sistemas planetarios más estudiado y varios de sus planetas se encuentra dentro de la zona habitable de esta estrella.
+En el ranking por `Instalación / telescopio`, TRAPPIST-South no aparece explícitamente como instalación independiente. Sin embargo, al buscar los planetas cuyo nombre contiene `TRAPPIST`, aparecen 7 planetas correspondientes al sistema TRAPPIST-1. Por esto, en este trabajo se reporta que TRAPPIST-South está asociado al descubrimiento del sistema TRAPPIST-1. Además, 3 de los 7 planetas tienen como disc_facility el Observatorio La Silla, donde se encuentra el telescopio TRAPPIST-South. TRAPPIST-1 es uno de los sistemas planetarios más estudiados y varios de sus planetas se encuentran dentro de la zona habitable de esta estrella.
 
 ## Habitabilidad de los exoplanetas rocosos pequeños
 
-En este trabajo se compara la habitabilidad simple dada por un rango de temperatura de equilibrio del planeta con los límites conservador y optimistas dadas por Kopparapu.
+En este trabajo se compara la habitabilidad simple dada por un rango de temperatura de equilibrio del planeta con los límites conservadores y optimistas dados por Kopparapu.
 
 La siguiente gráfica muestra todos los planetas encontrados destacando sobre ellos los 3 filtros de habitabilidad para este trabajo.
 ![Resultado](grafica_1.png)
@@ -135,7 +132,7 @@ La siguiente tabla resume los resultados obtenidos por los 3 métodos:
 | HZ Kopparapu (optimista)   | 55       | 2850                 | 5757                 | 177                 | 381                 |
 | HZ Kopparapu (conservador) | 28       | 2900                 | 5596                 | 177                 | 279                 |
 
-Se observa que para el método de kopparapu tanto en límite optimista como en límite conservador, los planetas se encuentran con temperaturas en un rango diferente al de 200 -320 K propuesto por el ejercicio esto debido a que los criterios de Kopparapu se basa principalmente en el flujo de la estrella, la atmósfera y no solo en la temperatura del planeta y por esto la diferencia.
+Se observa que los planetas seleccionados por el modelo de Kopparapu no tienen exactamente el mismo rango de temperatura que el filtro básico de 200 K a 320 K. Esto se debe a que el modelo de Kopparapu se basa principalmente en el flujo estelar, la luminosidad de la estrella, la distancia orbital y supuestos atmosféricos, no solo en la temperatura de equilibrio del planeta.
 
 Ahora analicemos los tipos de estrellas en las que aparecen estos planetas con condiciones habitables. La siguiente tabla muestra las estrellas de secuencia principal y su porcentaje de la secuencia principal[5]:
 
@@ -149,13 +146,23 @@ Ahora analicemos los tipos de estrellas en las que aparecen estos planetas con c
 | K     | 3700 – 5200     | naranja               | 12.1 %                             |
 | M     | ≤ 3700          | rojo                  | 76.45 %                            |
 
-se observa que el rango inferior de la temperatura es igual para todos los métodos de estrellas de 2566 K de temperatura, y un máximo de 5818 K. Esto abarca las estrellas clase M, K, G (tipo Sol) y según la tabla anterior esto corresponde a caso el 96.15 % de las estrellas de secuencia principal por lo tanto las más abundantes.
+Se observa que el filtro simple de temperatura incluye estrellas desde 2566 K hasta 5818 K. Recordando que al aplicar el modelo de Kopparapu y restringirlo al rango de validez de 2600 K a 7200 K, los candidatos comienzan en 2850 K para la zona optimista y en 2900 K para la zona conservadora.
+
+En general, los exoplanetas aparecen alrededor de estrellas frías tipo M y K, y en menor medida alrededor de estrellas tipo G. Según la tabla usada, estas clases representan una gran fracción (88.55 %) de las estrellas de secuencia principal, por lo que también son las más abundantes.
 
 # Conclusiones
 
-Más del 95% de los exoplanetas (y de los rocosos pequeños) se detectan por el método de tránsito, evidenciando un fuerte sesgo observacional.
-Los candidatos a habitabilidad se concentran en estrellas tipo M, K y G, que representan la gran mayoría de la secuencia principal.
-Los criterios de temperatura de equilibrio y zona habitable no coinciden completamente, mostrando la importancia de modelos climáticos más complejos.
+Al aplicar el filtro de planetas pequeños y templados, definido por $R < 2.5R_\oplus$ y una temperatura de equilibrio entre 200 K y 320 K, se encontraron 86 candidatos dentro de la base de datos consultada. Aunque en este trabajo se les llama “rocosos pequeños”, es importante recordar que este criterio por radio no garantiza que todos tengan composición rocosa, ya que algunos podrían ser mini-Neptunos.
+
+El método de tránsito es el más eficiente, ya que detecta el 77.91 % de los planetas rocosos pequeños y templados encontrados. Esto muestra que el tránsito sigue siendo el método dominante para buscar planetas tipo Tierra 2.0, aunque también aparece una contribución importante del método de velocidad radial con el 19.77 %.
+
+Al analizar las instalaciones de descubrimiento, Kepler es la misión que más candidatos aporta, con 44 planetas, equivalente al 51.16 % de la muestra filtrada. Después aparecen TESS con 11 candidatos y K2 con 7 candidatos. Esto indica que las misiones espaciales basadas en el método de tránsito han sido las más efectivas para encontrar planetas pequeños en rangos de temperatura compatibles con agua líquida.
+
+El filtro simple de temperatura de equilibrio no coincide completamente con la zona habitable calculada por Kopparapu. Esto ocurre porque el modelo de Kopparapu no depende solo de la temperatura del planeta, sino también del flujo estelar, la luminosidad de la estrella, la distancia orbital y supuestos atmosféricos. Por eso algunos planetas que están en la zona habitable de Kopparapu pueden quedar por fuera del rango 200 K – 320 K, y algunos planetas dentro de ese rango pueden no estar en la zona habitable de Kopparapu.
+
+Los exoplanetas pequeños y templados encontrados se concentran principalmente alrededor de estrellas frías tipo M y K, y en menor medida alrededor de estrellas tipo G. Sin embargo, esto no significa que los planetas habitables solo existan alrededor de estas estrellas. Actualmente solo se han detectado 4701 de sistemas planetarios[1], mientras que Gaia DR3 contiene aproximadamente 1.8 mil millones de fuentes astronómicas, en su mayoría estrellas de la Vía Láctea [6]. Esta diferencia muestra que todavía observamos una fracción muy pequeña de la población estelar, por lo que sería un sesgo afirmar que los planetas pequeños templados solo existen alrededor de estrellas frías.
+
+Lo que sí se puede afirmar con los datos de este trabajo es que los exoplanetas pequeños y templados descubiertos hasta ahora aparecen mayormente alrededor de estrellas frías, y que su detección depende mucho del método utilizado. En esta muestra, el método de tránsito y misiones como Kepler, TESS y K2 son las herramientas más eficientes para encontrar candidatos con condiciones compatibles con habitabilidad.
 
 # Referencias
 
@@ -168,3 +175,5 @@ Los criterios de temperatura de equilibrio y zona habitable no coinciden complet
 [4] Kopparapu, R. K., Ramirez, R., Kasting, J. F., Eymet, V., Robinson, T. D., Mahadevan, S., Terrien, R. C., Domagal-Goldman, S., Meadows, V., & Deshpande, R. (2013). Erratum: Habitable zones around main-sequence stars: New estimates. The Astrophysical Journal, 770(1), 82. https://doi.org/10.1088/0004-637X/770/1/82
 
 [5] Wikipedia contributors. (s. f.). Clasificación estelar. En Wikipedia, la enciclopedia libre. Recuperado el 27 de abril de 2026, de https://es.wikipedia.org/wiki/Clasificaci%C3%B3n_estelar
+
+[6] Gaia Collaboration, Vallenari, A., Brown, A. G. A., Prusti, T., de Bruijne, J. H. J., Arenou, F., Babusiaux, C., Biermann, M., Creevey, O. L., Ducourant, C., Evans, D. W., Eyer, L., Guerra, R., Hutton, A., Jordi, C., Klioner, S. A., Lammers, U. L., Lindegren, L., Luri, X., ... Walton, N. A. (2023). Gaia Data Release 3: Summary of the content and survey properties. Astronomy & Astrophysics, 674, A1. https://doi.org/10.1051/0004-6361/202243940

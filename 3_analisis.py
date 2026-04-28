@@ -6,21 +6,15 @@ import seaborn as sns
 
 conexion = sqlite3.connect('sistemas_planetarios.db')
 
-consulta_dm = "SELECT discoverymethod, AVG(pl_rade), count(pl_rade) FROM planetas GROUP BY discoverymethod ORDER BY discoverymethod;"
-
-df_mthd_rad = pd.read_sql_query(consulta_dm, conexion)
-total = df_mthd_rad['count(pl_rade)'].sum()
-df_mthd_rad['%'] = np.round(df_mthd_rad['count(pl_rade)']/total*100, 2)
-print("Radio promedio por método de descubrimiento de exoplanetas")
-print(df_mthd_rad)
-
-consulta_facility = "SELECT disc_facility, COUNT(*) AS cantidad FROM planetas GROUP BY disc_facility ORDER BY cantidad DESC;"
+consulta_facility = "SELECT disc_facility, discoverymethod, COUNT(*) AS cantidad FROM planetas WHERE pl_rade < 2.5 AND pl_eqt BETWEEN 200 AND 320 GROUP BY disc_facility, discoverymethod ORDER BY cantidad DESC;"
 df_facility = pd.read_sql_query(consulta_facility, conexion)
+cantidad_total = df_facility['cantidad'].sum()
+df_facility['%'] = np.round(df_facility['cantidad']/cantidad_total*100, 2)
 print("--------------------------------")
 print("Cantidad de planetas descubiertas por cada telescopio")
 print(df_facility)
 
-consulta_dm = "SELECT discoverymethod, AVG(pl_rade), count(pl_rade) FROM planetas WHERE pl_rade < 2.5 GROUP BY discoverymethod ORDER BY discoverymethod;"
+consulta_dm = "SELECT discoverymethod, AVG(pl_rade), count(pl_rade) FROM planetas WHERE pl_rade < 2.5 AND pl_eqt BETWEEN 200 AND 320 GROUP BY discoverymethod ORDER BY discoverymethod;"
 
 df_mthd_rad = pd.read_sql_query(consulta_dm, conexion)
 total = df_mthd_rad['count(pl_rade)'].sum()
