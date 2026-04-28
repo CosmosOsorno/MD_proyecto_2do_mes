@@ -117,6 +117,7 @@ En el ranking por `Instalación / telescopio`, TRAPPIST-South no aparece explíc
 En este trabajo se compara la habitabilidad simple dada por un rango de temperatura de equilibrio del planeta con los límites conservadores y optimistas dados por Kopparapu.
 
 La siguiente gráfica muestra todos los planetas encontrados destacando sobre ellos los 3 filtros de habitabilidad para este trabajo.
+
 ![Resultado](grafica_1.png)
 
 La gráfica 2 es un zoom a los datos dónde se encuentran los candidatos de las zonas habitables.
